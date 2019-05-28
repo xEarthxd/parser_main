@@ -31,7 +31,7 @@ class parsers(object):
         logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)-8s %(message)s',
                     filename='app.log',
-                    filemode='a')
+                    filemode='w')
         logging.getLogger('chardet.charsetprober').setLevel(logging.INFO)
         self.logger = logging.getLogger("Parser Logger")
         self.init_file_name = 'need_to_parse' + '/' + self.file_to_parse.split('.')[0]
@@ -152,7 +152,7 @@ class parsers(object):
     def insert_into_db(self, parsed_data, job):
         from pymongo import MongoClient
         import pymongo
-            try:
+        try:
             self.output_db.insert_one(parsed_data)
             self.logger.info("[Inserted file ({}) is done]".format(job))
         except:
