@@ -17,6 +17,7 @@ class parsers(object):
         self.cnx_INIT = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")
         self.parsed_false = self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].find_one({'parsed' : False})
         self.file_to_parse = self.parsed_false['file_name']
+        self.queue_manager_is_done = False
         
         logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -104,7 +105,11 @@ class parsers(object):
 #                      'company_search_index')
         while(True):
 
-            job = queue.get()
+            try:
+                job = queue.get(block=True, timeout=5)
+            except:
+                break
+
             self.logger.info("[Worker] Parsing filename ({})".format(job))
             parser = self.find_parser(job)  #  find the parser for that filename
 
@@ -132,6 +137,8 @@ class parsers(object):
             else:
                 self.logger.info("[Worker] Inserting filename ({})".format(job))
                 self.insert_into_db(parsed_data, job)
+
+            
  
     def insert_into_db(self, parsed_data, job):
         from pymongo import MongoClient
@@ -159,7 +166,12 @@ class parsers(object):
                     queue.put(path_to_folder + "/" + file)  #  put full path into queue
         self.logger.info("[QueueManager] Starting Queue Manager at folder ./{}/".format(starting))
         list_all_files_into_queue(starting, queue)
+        
+        self.queue_manager_is_done = True
+        queue.close()  #  no more adding data
         self.logger.info("All jobs are inserted into queue")
+        print("All jobs are inserted into queue")
+        
 
         
     #  main function : run this cell to start parsing
@@ -178,6 +190,14 @@ class parsers(object):
         processes = [Process(target=self.process_job, args=(queue, )) for i in range(num_process)]
         for process in processes:
             process.start()
-    
-    
+           
+        for procees in processes:
+            process.join()
+        
 
+
+
+
+    
+    
+        
