@@ -20,10 +20,7 @@ class parsers(object):
         COLLECTION_NAME = 'ParsedJobads'
         self.output_db = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")[DB_NAME][COLLECTION_NAME]
 
-        self.parsed_false = self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].find_one({'parsed' : False})
-        self.parsing_id = self.parsed_false['_id']
-        self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id': self.parsing_id}, {'$set': {'parsed': 'locked'}})
-
+        self.parsed_false = self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].find_one_and_update({'parsed' : False}, {'$set': {'parsed': 'locked'}})
         self.file_to_parse = self.parsed_false['file_name']
         
         self.queue_manager_is_done = False
