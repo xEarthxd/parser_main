@@ -12,7 +12,7 @@ def download_file(file_name):
     try:
         downloaded = os.listdir('./downloaded')
     except:
-        os.mkdir('download')
+        os.mkdir('downloaded')
         downloaded = os.listdir('./downloaded')
 
     if file_name in downloaded: 
