@@ -12,11 +12,16 @@ class parsers(object):
         import logging
         from pymongo import MongoClient
         
-        self.DB_NAME_INIT = 'test2'
-        self.COLLECTION_NAME_INIT = 'test2'
+        self.DB_NAME_INIT = 'Test'
+        self.COLLECTION_NAME_INIT = 'S3FilesParseStatus'
         self.cnx_INIT = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")
+
         self.parsed_false = self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].find_one({'parsed' : False})
+        self.parsing_id = self.parsed_false['_id']
+        self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id': self.parsing_id}, {'$set': {'parsed': 'locked'}})
+
         self.file_to_parse = self.parsed_false['file_name']
+        
         self.queue_manager_is_done = False
         
         logging.basicConfig(level=logging.DEBUG,
@@ -149,7 +154,7 @@ class parsers(object):
         try:
             cnx[DB_NAME][COLLECTION_NAME].insert_one(parsed_data)
             self.logger.info("[Inserted file ({}) is done]".format(job))
-            self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'parsed' : False}, {'$set' : {'parsed' : True}})
+            self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id' :self.parsing_id }, {'$set' : {'parsed' : True}})
         except:
             self.logger.warning("[Worker] Found duplicated file filename ({})".format(job))
     
