@@ -9,7 +9,11 @@ import subprocess
 
 def download_file(file_name):
     '''Download file from S3 to local EC2'''
-    downloaded = os.listdir('./downloaded')
+    try:
+        downloaded = os.listdir('./downloaded')
+    except:
+        os.mkdir('download')
+        downloaded = os.listdir('./downloaded')
 
     if file_name in downloaded: 
         pass
