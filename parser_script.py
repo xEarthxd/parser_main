@@ -16,6 +16,10 @@ class parsers(object):
         self.COLLECTION_NAME_INIT = 'S3FilesParseStatus'
         self.cnx_INIT = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")
 
+        DB_NAME = 'Test'
+        COLLECTION_NAME = 'ParsedJobads'
+        self.output_db = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")[DB_NAME][COLLECTION_NAME]
+
         self.parsed_false = self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].find_one({'parsed' : False})
         self.parsing_id = self.parsed_false['_id']
         self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id': self.parsing_id}, {'$set': {'parsed': 'locked'}})
@@ -148,13 +152,9 @@ class parsers(object):
     def insert_into_db(self, parsed_data, job):
         from pymongo import MongoClient
         import pymongo
-        DB_NAME = 'test3'
-        COLLECTION_NAME = 'test3'
-        cnx = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")
-        try:
-            cnx[DB_NAME][COLLECTION_NAME].insert_one(parsed_data)
+            try:
+            self.output_db.insert_one(parsed_data)
             self.logger.info("[Inserted file ({}) is done]".format(job))
-            self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id' :self.parsing_id }, {'$set' : {'parsed' : True}})
         except:
             self.logger.warning("[Worker] Found duplicated file filename ({})".format(job))
     
@@ -174,6 +174,8 @@ class parsers(object):
         
         self.queue_manager_is_done = True
         queue.close()  #  no more adding data
+        self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id' :self.parsing_id }, {'$set' : {'parsed' : True}})
+        
         self.logger.info("All jobs are inserted into queue")
         print("All jobs are inserted into queue")
         
