@@ -61,7 +61,7 @@ if __name__ == '__main__':
     
     ## Suppose file name is acquired and store in file_name variable ##
 
-    file_name = con.find_one({'parsed': False})['file_name'].split('.')[0]
+    file_name = con.find_one({'parsed': False})['file_name']
     
     download_file(file_name)
     print(True)
