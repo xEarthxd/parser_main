@@ -47,8 +47,7 @@ def extract_downloaded(file_name):
         subprocess.run(["tar", "-xf", './downloaded/' +
                         file_name, '-C', 'need_to_parse/'])
 
-
-if __name__ == '__main__':
+def main():
     from pymongo import MongoClient
     from modules.Configuration import getConfig
 
@@ -80,3 +79,10 @@ if __name__ == '__main__':
     download_file(file_name)
     requests.get(
         'https://1rymu04g2k.execute-api.ap-southeast-1.amazonaws.com/default/lambda2')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except e:
+        log('main_parser', {"error": e})
