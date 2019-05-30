@@ -10,7 +10,7 @@ from modules.Logger import log
 import requests
 
 
-def download_file(file_name):
+def download_file(bucket, file_name):
     '''Download file from S3 to local EC2'''
     try:
         downloaded = os.listdir('./downloaded')
@@ -76,7 +76,7 @@ def main():
     file_name = con.find_one({'parsed': False})['file_name']
     log('main_parser', {"message": 'New file is found', "filename": file_name})
 
-    download_file(file_name)
+    download_file(bucket, file_name)
     requests.get(
         'https://1rymu04g2k.execute-api.ap-southeast-1.amazonaws.com/default/lambda2')
 
@@ -84,5 +84,5 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except e:
-        log('main_parser', {"error": e})
+    except Exception as e:
+        log('main_parser', {"error": str(e)})

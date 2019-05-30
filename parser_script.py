@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
+import os
+import hashlib
 
-# ## Parser Class 
+from pymongo import MongoClient
+
+from modules.Configuration import getConfig
+from modules.Logger import log
 
 class parsers(object):
     def __init__(self):
-        import os
-        from modules.Logger import log
-        from pymongo import MongoClient
-        from modules.Configuration import getConfig
-
         config_init = getConfig()['S3FILESPARSE_DATABASE']
         self.DB_NAME_INIT = config_init['databasename']
         self.COLLECTION_NAME_INIT = config_init['collectionname']
@@ -90,7 +88,6 @@ class parsers(object):
     
     #  Job_worker : Each process will parse the document, then insert into database
     def process_job(self, queue, test=False):
-        import hashlib
 #         from MongodbSearcher import MongodbSearcher
 #         from ProvinceMiner.miner_script import ProvinceMiner
 #         pm = ProvinceMiner()
@@ -136,10 +133,8 @@ class parsers(object):
             
  
     def insert_into_db(self, parsed_data, job):
-        from pymongo import MongoClient
-        import pymongo
         try:
-            self.output_db.insert_one(parsed_data)
+            self.cnx.insert_one(parsed_data)
             # log('parser_script', "[Inserted file ({}) is done]".format(job))
             self.count_success += 1
         except:
@@ -147,14 +142,14 @@ class parsers(object):
             self.count_duplicate += 1
     
     def queue_manager_job(self, starting, queue):
-        import os
         def list_all_files_into_queue(path_to_folder, queue):
             this_folder = os.listdir(path_to_folder)
             for file in this_folder:
                 try: #  This is a folder, recursive case
-                    sub_files = list_all_files_into_queue(path_to_folder + "/" + file, queue)
+                    list_all_files_into_queue(path_to_folder + "/" + file, queue)
                 except NotADirectoryError: #  This is a file (base case)
                     queue.put(path_to_folder + "/" + file)  #  put full path into queue
+
         log('parser_script', "[QueueManager] Starting Queue Manager at folder ./{}/".format(starting))
         list_all_files_into_queue(starting, queue)
         
