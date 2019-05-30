@@ -7,6 +7,7 @@ import os
 from parser_script import parsers
 import subprocess
 from modules.Logger import log
+import requests
 
 def download_file(file_name):
     '''Download file from S3 to local EC2'''
@@ -26,6 +27,7 @@ def download_file(file_name):
         file_name_parse = file_name.split('.')[0]
         parser = parsers()
         parser.main()
+
         
 def extract_downloaded(file_name):
     '''Extract downloaded file'''
@@ -68,5 +70,6 @@ if __name__ == '__main__':
     file_name = con.find_one({'parsed': False})['file_name']
     
     download_file(file_name)
-    print(True)
+    requests.get('https://1rymu04g2k.execute-api.ap-southeast-1.amazonaws.com/default/lambda2')
+
 
