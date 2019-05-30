@@ -156,7 +156,7 @@ class parsers(object):
         
         self.queue_manager_is_done = True
         queue.close()  #  no more adding data
-        self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id' :self.parsing_id }, {'$set' : {'parsed' : True}})
+        self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id' :self.parsing_id }, {'$set' : {'parsed' : True, 'mined': False}})
         
         log('parser_script', {'message' : 'Parsed Success', 'success': self.count_success, 'duplicate': self.count_duplicate, 'error': self.count_error, 'time': datetime.datetime.now()})
         print("All jobs are inserted into queue")
