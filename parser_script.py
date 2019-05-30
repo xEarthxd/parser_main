@@ -1,5 +1,6 @@
 import os
 import hashlib
+import datetime
 
 from pymongo import MongoClient
 
@@ -147,7 +148,7 @@ class parsers(object):
             for file in this_folder:
                 try: #  This is a folder, recursive case
                     list_all_files_into_queue(path_to_folder + "/" + file, queue)
-                except NotADirectoryError: #  This is a file (base case)
+                except: #  This is a file (base case)
                     queue.put(path_to_folder + "/" + file)  #  put full path into queue
 
         log('parser_script', "[QueueManager] Starting Queue Manager at folder ./{}/".format(starting))

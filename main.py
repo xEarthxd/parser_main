@@ -86,3 +86,4 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         log('main_parser', {"error": str(e)})
+        raise e
