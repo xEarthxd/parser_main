@@ -6,6 +6,7 @@ from boto3.session import Session
 import os
 from parser_script import parsers
 import subprocess
+from modules.Logger import log
 
 def download_file(file_name):
     '''Download file from S3 to local EC2'''
@@ -19,7 +20,9 @@ def download_file(file_name):
         pass
     else:  #  Download file from S3
         bucket.download_file(file_name, 'downloaded/' + file_name)
+        log('main_parser', 'Donwloaded {} DONE'.format(file_name))
         extract_downloaded(file_name) #  Extract tar.gz
+        log('main_parser', 'Extracted {} DONE'.format(file_name))
         file_name_parse = file_name.split('.')[0]
         parser = parsers()
         parser.main()
@@ -36,18 +39,19 @@ def extract_downloaded(file_name):
         pass
     else:
 #         !tar -xf ../downloaded/{file_name} -C need_to_parse/
-
         subprocess.run(["tar", "-xf", './downloaded/'+file_name, '-C', 'need_to_parse/'])
-    
+
 if __name__ == '__main__':
     from pymongo import MongoClient
-    DB_NAME_INIT = 'Test'
-    COLLECTION_NAME_INIT = 'S3FilesParseStatus'
-    cnx_INIT = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")
-    con = cnx_INIT[DB_NAME_INIT][COLLECTION_NAME_INIT]
-    ACCESS_KEY_ID = 'AKIAJLKZSYZVQZ2I65SA'
-    SECRET_ACCESS_KEY = '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'
-    REGION_NAME = 'ap-southeast-1'
+    from modules.Configuration import getConfig
+
+    config = getConfig()['PARSER_MAIN_S3_CONNECTION']
+    DB_NAME_INIT = config['databasename']
+    COLLECTION_NAME_INIT = config['collectionname']
+    con = MongoClient("mongodb://{}:{}@{}:27017".format(config['username'], config['password'], config['databaseaddress']))[DB_NAME_INIT][COLLECTION_NAME_INIT]
+    ACCESS_KEY_ID = config['ACCESS_KEY_ID']
+    SECRET_ACCESS_KEY = config['SECRET_ACCESS_KEY']
+    REGION_NAME = config['REGION_NAME']
     
     session = Session(
         aws_access_key_id=ACCESS_KEY_ID,

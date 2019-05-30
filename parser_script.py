@@ -3,35 +3,31 @@
 
 # ## Parser Class 
 
-# In[124]:
-
-
 class parsers(object):
     def __init__(self):
         import os
-        import logging
+        from modules.Logger import log
         from pymongo import MongoClient
-        
-        self.DB_NAME_INIT = 'Test'
-        self.COLLECTION_NAME_INIT = 'S3FilesParseStatus'
-        self.cnx_INIT = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")
+        from modules.Configuration import getConfig
 
-        DB_NAME = 'Test'
-        COLLECTION_NAME = 'ParsedJobads'
-        self.output_db = MongoClient("mongodb://tdri:stafftdri@3.0.20.249:27017")[DB_NAME][COLLECTION_NAME]
+        config_init = getConfig()['S3FILESPARSE_DATABASE']
+        self.DB_NAME_INIT = config_init['databasename']
+        self.COLLECTION_NAME_INIT = config_init['collectionname']
+        self.cnx_INIT = MongoClient("mongodb://{}:{}@{}:27017".format(config_init['username'], config_init['password'], config_init['databaseaddress']))[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT]
+
+        config_parser = getConfig()['PARSEDJOBADS_DATABASE']
+        DB_NAME = config_parser['databasename']
+        COLLECTION_NAME = config_parser['collectionname']
+        self.cnx = MongoClient("mongodb://{}:{}@{}:27017".format(config_parser['username'], config_parser['password'], config_parser['databaseaddress']))[DB_NAME][COLLECTION_NAME]
 
         self.parsed_false = self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].find_one_and_update({'parsed' : False}, {'$set': {'parsed': 'locked'}})
         self.parsing_id = self.parsed_false['_id']
         self.file_to_parse = self.parsed_false['file_name']
         
         self.queue_manager_is_done = False
-        
-        logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    filename='app.log',
-                    filemode='w')
-        logging.getLogger('chardet.charsetprober').setLevel(logging.INFO)
-        self.logger = logging.getLogger("Parser Logger")
+        self.count_success = 0
+        self.count_duplicate = 0
+        self.count_error = 0
         self.init_file_name = 'need_to_parse' + '/' + self.file_to_parse.split('.')[0]
         self.main_file_name = self.file_to_parse
         print(True)
@@ -117,7 +113,7 @@ class parsers(object):
             except:
                 break
 
-            self.logger.info("[Worker] Parsing filename ({})".format(job))
+            # log('parser_script', "[Worker] Parsing filename ({})".format(job))
             parser = self.find_parser(job)  #  find the parser for that filename
 
             try:
@@ -140,9 +136,10 @@ class parsers(object):
 #                     parsed_data['province'] = 'undefined'
                 
             except:
-                self.logger.warning("[Worker] Filename ({}) gives error".format(job))
+                # log('parser_script', "[Worker] Filename ({}) gives error".format(job))
+                self.count_error += 1
             else:
-                self.logger.info("[Worker] Inserting filename ({})".format(job))
+                # log('parser_script', "[Worker] Inserting filename ({})".format(job))
                 self.insert_into_db(parsed_data, job)
 
             
@@ -152,11 +149,11 @@ class parsers(object):
         import pymongo
         try:
             self.output_db.insert_one(parsed_data)
-            self.logger.info("[Inserted file ({}) is done]".format(job))
+            # log('parser_script', "[Inserted file ({}) is done]".format(job))
+            self.count_success += 1
         except:
-            self.logger.warning("[Worker] Found duplicated file filename ({})".format(job))
-    
-
+            # self.logger.warning("[Worker] Found duplicated file filename ({})".format(job))
+            self.count_duplicate += 1
     
     def queue_manager_job(self, starting, queue):
         import os
@@ -167,14 +164,14 @@ class parsers(object):
                     sub_files = list_all_files_into_queue(path_to_folder + "/" + file, queue)
                 except NotADirectoryError: #  This is a file (base case)
                     queue.put(path_to_folder + "/" + file)  #  put full path into queue
-        self.logger.info("[QueueManager] Starting Queue Manager at folder ./{}/".format(starting))
+        log('parser_script', "[QueueManager] Starting Queue Manager at folder ./{}/".format(starting))
         list_all_files_into_queue(starting, queue)
         
         self.queue_manager_is_done = True
         queue.close()  #  no more adding data
         self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one({'_id' :self.parsing_id }, {'$set' : {'parsed' : True}})
         
-        self.logger.info("All jobs are inserted into queue")
+        log('parser_script', {'message' : 'Parsed Success', 'success': self.count_success, 'duplicate': self.count_duplicate, 'error': self.count_error, 'time': datetime.datetime.now()})
         print("All jobs are inserted into queue")
         
 
