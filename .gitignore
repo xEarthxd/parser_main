@@ -5,5 +5,5 @@ __pycache__/
 app.log
 downloaded/
 need_to_parse/
-
+venv/
 
