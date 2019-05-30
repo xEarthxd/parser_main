@@ -13,7 +13,7 @@ class parsers(object):
         config_init = getConfig()['S3FILESPARSE_DATABASE']
         self.DB_NAME_INIT = config_init['databasename']
         self.COLLECTION_NAME_INIT = config_init['collectionname']
-        self.cnx_INIT = MongoClient("mongodb://{}:{}@{}:27017".format(config_init['username'], config_init['password'], config_init['databaseaddress']))[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT]
+        self.cnx_INIT = MongoClient("mongodb://{}:{}@{}:27017".format(config_init['username'], config_init['password'], config_init['databaseaddress']))
 
         config_parser = getConfig()['PARSEDJOBADS_DATABASE']
         DB_NAME = config_parser['databasename']
@@ -34,15 +34,6 @@ class parsers(object):
     
     def get_file_name(self):
         return self.main_file_name
-    
-    class ParserNotFoundError(Exception):
-        pass
-    
-    class FilenameSplitError(Exception):
-        pass
-    
-    class NotADirectoryError(Exception):
-        pass
     
     def find_parser(self, file_name):
         
@@ -200,6 +191,13 @@ class parsers(object):
 
 
 
-    
+class ParserNotFoundError(Exception):
+    pass
+
+class FilenameSplitError(Exception):
+    pass
+
+class NotADirectoryError(Exception):
+    pass
     
         
