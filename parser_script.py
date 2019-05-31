@@ -187,6 +187,6 @@ class Parsers(object):
 
         log('parser_script',
             {'message': 'Parsed Success',
-             'success': self.count_success,
-             'duplicate': self.count_duplicate,
-             'error': self.count_error})
+             'success': self.count_success.value,
+             'duplicate': self.count_duplicate.value,
+             'error': self.count_error.value})
