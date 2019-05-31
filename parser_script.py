@@ -1,7 +1,8 @@
 import os
 import hashlib
 import datetime
-from multiprocessing import Queue, Process
+from ctypes import c_int
+from multiprocessing import Queue, Process, Value
 
 from pymongo import MongoClient
 
@@ -41,9 +42,9 @@ class Parsers(object):
         self.file_to_parse = self.parsed_false['file_name']
 
         self.queue_manager_is_done = False
-        self.count_success = 0
-        self.count_duplicate = 0
-        self.count_error = 0
+        self.count_success = Value(c_int, 0)
+        self.count_duplicate = Value(c_int, 0)
+        self.count_error = Value(c_int, 0)
         self.init_file_name = 'need_to_parse' + \
             '/' + self.file_to_parse.split('.')[0]
         self.main_file_name = self.file_to_parse
@@ -127,7 +128,7 @@ class Parsers(object):
             except:
                 log('parser_script',
                     "[Worker] Filename ({}) gives error".format(job))
-                count_error += 1
+                count_error.value += 1
             else:
                 # log('parser_script', "[Worker] Inserting filename ({})".format(job))
                 self.insert_into_db(
@@ -136,11 +137,11 @@ class Parsers(object):
     def insert_into_db(self, parsed_data, job, count_success, count_duplicate):
         try:
             self.cnx.insert_one(parsed_data)
-            count_success += 1
+            count_success.value += 1
         except:
             log('parser_script', {
                 "message": "[Worker] Found duplicated file ", "file_name": job})
-            count_duplicate += 1
+            count_duplicate.value += 1
 
     def queue_manager_job(self, starting, queue):
         def list_all_files_into_queue(path_to_folder, queue):
@@ -175,6 +176,7 @@ class Parsers(object):
         count_success = self.count_success
         count_duplicate = self.count_duplicate
         count_error = self.count_error
+        
         processes = [Process(target=self.process_job, args=(queue, count_success, count_error, count_duplicate))
                      for i in range(num_process)]
         for process in processes:
