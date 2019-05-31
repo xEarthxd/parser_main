@@ -1,13 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-from pymongo import MongoClient
-from boto3.session import Session
 import os
-from parser_script import parsers
 import subprocess
-from modules.Logger import log
+
 import requests
+from boto3.session import Session
+from pymongo import MongoClient
+
+from modules.Logger import log
+from parser_script import Parsers
+from modules.Configuration import getConfig
 
 
 def download_file(bucket, file_name):
@@ -20,15 +20,14 @@ def download_file(bucket, file_name):
 
     if file_name in downloaded:
         log('main_parser', 'File is downloaded earlier')
-        pass
     else:  # Download file from S3
         log('main_parser', 'Downloading file from S3')
         bucket.download_file(file_name, 'downloaded/' + file_name)
         log('main_parser', 'Donwloaded {} DONE'.format(file_name))
         extract_downloaded(file_name)  # Extract tar.gz
         log('main_parser', 'Extracted {} DONE'.format(file_name))
-        file_name_parse = file_name.split('.')[0]
-        parser = parsers()
+
+        parser = Parsers()
         parser.main()
 
 
@@ -47,10 +46,8 @@ def extract_downloaded(file_name):
         subprocess.run(["tar", "-xf", './downloaded/' +
                         file_name, '-C', 'need_to_parse/'])
 
-def main():
-    from pymongo import MongoClient
-    from modules.Configuration import getConfig
 
+def main():
     log('main_parser', 'Parser is started')
 
     config = getConfig()['PARSER_MAIN_S3_CONNECTION']
