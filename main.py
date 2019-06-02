@@ -67,8 +67,8 @@ def main():
     )
 
     s3 = session.resource('s3')
-    # bucket = s3.Bucket('sea-html')
-    bucket = s3.Bucket('earthlambda')
+    bucket = s3.Bucket('sea-html')
+    # bucket = s3.Bucket('earthlambda')
 
     file_name = con.find_one({'parsed': False})['file_name']
     log('main_parser', {"message": 'New file is found', "filename": file_name})
