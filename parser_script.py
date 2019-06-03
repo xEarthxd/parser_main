@@ -187,6 +187,7 @@ class Parsers(object):
 
         log('parser_script',
             {'message': 'Parsed Success',
+             'file_name': self.file_to_parse,
              'success': self.count_success.value,
              'duplicate': self.count_duplicate.value,
              'error': self.count_error.value})
