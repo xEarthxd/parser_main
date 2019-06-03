@@ -74,6 +74,8 @@ def main():
     log('main_parser', {"message": 'New file is found', "filename": file_name})
 
     download_file(bucket, file_name)
+    log('main_parser', {"message": 'firing event to lambda2', "filename": file_name})
+
     requests.get(
         'https://1rymu04g2k.execute-api.ap-southeast-1.amazonaws.com/default/lambda2')
 

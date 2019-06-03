@@ -1,4 +1,5 @@
 import os
+import time
 import hashlib
 import datetime
 from ctypes import c_int
@@ -106,33 +107,37 @@ class Parsers(object):
             return jobpub_parser
 
     def process_job(self, queue, count_success, count_duplicate, count_error, test=False):
+        trial = 0
         while(True):
             try:
                 job = queue.get(block=True, timeout=5)
             except:
-                break
-
-            parser = self.find_parser(job)  # find the parser for that filename
-
-            try:
-                parsed_data = parser(job)  # parse using filename
-                hash_company = hashlib.md5(
-                    parsed_data['company'].encode()).hexdigest()
-                hash_title_th = hashlib.md5(
-                    parsed_data['title_th'].encode()).hexdigest()
-                hash_description = hashlib.md5(
-                    parsed_data['description'].encode()).hexdigest()
-                parsed_data['hash'] = hash_company + \
-                    hash_title_th + hash_description
-                parsed_data['mined'] = False
-            except:
-                log('parser_script',
-                    "[Worker] Filename ({}) gives error".format(job))
-                count_error.value += 1
+                trial += 1
+                time.sleep(1)
+                if(trial >= 5 ):
+                    log('parser_script', "[Worker] Is done")
+                    break
             else:
-                # log('parser_script', "[Worker] Inserting filename ({})".format(job))
-                self.insert_into_db(
-                    parsed_data, job, count_success, count_duplicate)
+                parser = self.find_parser(job)  # find the parser for that filename
+
+                try:
+                    parsed_data = parser(job)  # parse using filename
+                    hash_company = hashlib.md5(
+                        parsed_data['company'].encode()).hexdigest()
+                    hash_title_th = hashlib.md5(
+                        parsed_data['title_th'].encode()).hexdigest()
+                    hash_description = hashlib.md5(
+                        parsed_data['description'].encode()).hexdigest()
+                    parsed_data['hash'] = hash_company + \
+                        hash_title_th + hash_description
+                    parsed_data['mined'] = False
+                except:
+                    log('parser_script', "[Worker] Filename ({}) gives error".format(job))
+                    count_error.value += 1
+                else:
+                    # log('parser_script', "[Worker] Inserting filename ({})".format(job))
+                    self.insert_into_db(
+                        parsed_data, job, count_success, count_duplicate)
 
     def insert_into_db(self, parsed_data, job, count_success, count_duplicate):
         try:
@@ -154,16 +159,12 @@ class Parsers(object):
                     # put full path into queue
                     queue.put(path_to_folder + "/" + file)
 
-        log('parser_script',
-            "[QueueManager] Starting Queue Manager at folder ./{}/".format(starting))
+        log('parser_script', "[QueueManager] Starting Queue Manager at folder ./{}/".format(starting))
         list_all_files_into_queue(starting, queue)
 
-        self.queue_manager_is_done = True
-        queue.close()  # no more adding data
-        self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one(
-            {'_id': self.parsing_id}, {'$set': {'parsed': True, 'mined': False}})
-
-        print("All jobs are inserted into queue")
+        # self.queue_manager_is_done = True
+        # queue.close()  # no more adding data
+        log('parser_script', "[QueueManager] Queue Manager is done ./{}/, unlocking jobads (set parsed true)".format(starting))
 
     def main(self, num_process=4):
         #  Start queue manager
@@ -191,3 +192,6 @@ class Parsers(object):
              'success': self.count_success.value,
              'duplicate': self.count_duplicate.value,
              'error': self.count_error.value})
+            
+        self.cnx_INIT[self.DB_NAME_INIT][self.COLLECTION_NAME_INIT].update_one(
+            {'_id': self.parsing_id}, {'$set': {'parsed': True, 'mined': False}})
