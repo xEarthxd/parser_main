@@ -68,8 +68,7 @@ def main():
     )
 
     s3 = session.resource('s3')
-    bucket = s3.Bucket('sea-html')
-    # bucket = s3.Bucket('earthlambda')
+    bucket = s3.Bucket('tdri-pipeline-testing')
 
     for record in con.find({'parsed': False}):
         file_name = record['file_name']
