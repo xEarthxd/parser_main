@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 import requests
@@ -24,6 +25,7 @@ def download_file(bucket, file_name):
         log('main_parser', 'Downloading file from S3')
         bucket.download_file(file_name, 'downloaded/' + file_name)
         log('main_parser', 'Donwloaded {} DONE'.format(file_name))
+        
         extract_downloaded(file_name)  # Extract tar.gz
         log('main_parser', 'Extracted {} DONE'.format(file_name))
 
@@ -42,9 +44,8 @@ def extract_downloaded(file_name):
     if file_name.split('.')[0] in parsed:
         pass
     else:
-        #         !tar -xf ../downloaded/{file_name} -C need_to_parse/
-        subprocess.run(["tar", "-xf", './downloaded/' +
-                        file_name, '-C', 'need_to_parse/'])
+        subprocess.run(["tar", "-xf", './downloaded/' + file_name,
+                        '-C', 'need_to_parse/'])  # This line is blocking
 
 
 def main():
@@ -70,14 +71,19 @@ def main():
     bucket = s3.Bucket('sea-html')
     # bucket = s3.Bucket('earthlambda')
 
-    file_name = con.find_one({'parsed': False})['file_name']
-    log('main_parser', {"message": 'New file is found', "filename": file_name})
+    for record in con.find({'parsed': False}):
+        file_name = record['file_name']
 
-    download_file(bucket, file_name)
-    log('main_parser', {"message": 'firing event to lambda2', "filename": file_name})
+        log('main_parser', {
+            "message": 'New file is found', "filename": file_name})
+        download_file(bucket, file_name)
 
-    requests.get(
-        'https://1rymu04g2k.execute-api.ap-southeast-1.amazonaws.com/default/lambda2')
+        log('main_parser', {
+            "message": 'firing event to lambda2', "filename": file_name})
+        requests.get(
+            'https://g6llzc4s2b.execute-api.ap-southeast-1.amazonaws.com/default/lambda2')
+
+        shutil.rmtree("./download", ignore_errors=False, onerror=None)
 
 
 if __name__ == '__main__':
