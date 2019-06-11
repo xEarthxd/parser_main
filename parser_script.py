@@ -168,7 +168,7 @@ class Parsers(object):
 
     def main(self, num_process=4):
         #  Start queue manager
-        queue = Queue(maxsize=10000)
+        queue = Queue(maxsize=5000)
         queueManager = Process(target=self.queue_manager_job,
                                args=(self.init_file_name, queue))
         queueManager.start()
