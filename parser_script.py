@@ -9,6 +9,7 @@ from pymongo import MongoClient
 
 from modules.Configuration import getConfig
 from modules.Logger import log
+from modules.ParseAmount import CleanAmount
 
 
 class ParserNotFoundError(Exception):
@@ -25,6 +26,7 @@ class NotADirectoryError(Exception):
 
 class Parsers(object):
     def __init__(self):
+        self.cleaner = CleanAmount()
         config_init = getConfig()['S3FILESPARSE_DATABASE']
         self.DB_NAME_INIT = config_init['databasename']
         self.COLLECTION_NAME_INIT = config_init['collectionname']
@@ -131,6 +133,7 @@ class Parsers(object):
                     parsed_data['hash'] = hash_company + \
                         hash_title_th + hash_description
                     parsed_data['mined'] = False
+                    parsed_data['amount'] = self.cleaner.clean_amount(parsed_data)
                 except:
                     log('parser_script', "[Worker] Filename ({}) gives error".format(job))
                     count_error.value += 1
