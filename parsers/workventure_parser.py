@@ -50,15 +50,12 @@ def workventure_parser(file_name):
         return qualification
     
     def get_education(data):
-        education = []
-        
         for item in data.get('included'):
-            edu_dict = dict()
+            education = [{'degree': '', 'faculty': '', 'major': ''}]
             if item['type'] == 'educations':
-                edu_dict['degree'] = ''
-                edu_dict['major'] = ''
-                edu_dict['faculty'] = item['attributes']['name']
-                education.append(edu_dict)
+                education[0]['degree'] = ''
+                education[0]['major'] = ''
+                education[0]['faculty'] = item['attributes']['name']
             elif (item['type'] == 'educations') is None: 
                 education = [{'degree': '', 'faculty': '', 'major': ''}]
         return education
