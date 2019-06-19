@@ -45,7 +45,7 @@ def thaibestjobs_parser(file_name):
         return qualification
     
     def get_education(soup):
-        education = {'degree' : '', 'major' : '' , 'faculty' : ''}
+        education = [{'degree' : '', 'major' : '' , 'faculty' : ''}]
         return education
     
     def get_location(soup):
