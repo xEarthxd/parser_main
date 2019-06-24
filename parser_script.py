@@ -136,7 +136,7 @@ class Parsers(object):
                         hash_title_th + hash_description
                     parsed_data['mined'] = False
                     if parsed_data['date'] == 'Not Found':
-                        parsed_data['date'] = self.date_extract.date_from_file(file_name
+                        parsed_data['date'] = self.date_extract.date_from_file(job)
                     parsed_data['amount'] = self.cleaner.clean_amount(parsed_data)
                 except:
                     log('parser_script', "[Worker] Filename ({}) gives error".format(job))
