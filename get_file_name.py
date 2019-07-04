@@ -17,7 +17,7 @@ session = Session(
 )
 
 s3 = session.resource('s3')
-bucket = s3.Bucket('sea-html')
+bucket = s3.Bucket('tdri-sea-html')
 
 ### MongoDB Connection ###
 
