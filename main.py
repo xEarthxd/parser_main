@@ -68,7 +68,7 @@ def main():
     )
 
     s3 = session.resource('s3')
-    bucket = s3.Bucket('tdri-pipeline-testing')
+    bucket = s3.Bucket('tdri-sea-html')
 
     for record in con.find({'parsed': False}):
         file_name = record['file_name']
